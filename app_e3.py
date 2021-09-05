@@ -156,16 +156,18 @@ async def list_customers():
 
 # TODO: SPP Code Search will come here !
 # road-2
-@app.post("/{email}", response_description="Search for SPP", response_model=sppModel)
+@app.post("/{spp_code}", response_description="Verification of SPP Code", response_model=sppModel)
 async def check_spp_code(email: EmailStr,spp_code: str):
     # print(type(email),type(spp_code))
-    if (customer := await db["customers"].find_one({"email" : email})) is not None:
-        print(customer)
-        print(customer['spp_code'])
-        if (customer['spp_code']==spp_code) is not True:
+    if (customer := await db["customers"].find_one({"spp_code" : spp_code})) is not None:
+        if (customer['email']==email) is not True:
             #return customer
             print('Customer Not Found')
-            
+        else: 
+            date = customer['Date']
+            print("Code has been verified for {spp_code} and email: {email} date of {date}".format(spp_code = spp_code, email = email,date= date))
+    else: 
+        print("Simple Phishing Protection Code({spp_code}) has not been found".format(spp_code=spp_code))        
 
     # raise HTTPException(status_code=404, detail=f"Customer Email Record not found")
 
