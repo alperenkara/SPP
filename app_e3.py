@@ -20,7 +20,7 @@ from typing import List
 
 # Enviroment values are registered under .env file
 from dotenv import dotenv_values
-credentials = dotenv_values(".env")
+credentials = dotenv_values("d.env")
 
 
 # Addding Cross Origin Resource Sharing
