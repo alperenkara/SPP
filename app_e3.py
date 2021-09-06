@@ -20,10 +20,30 @@ from typing import List
 
 # Enviroment values
 from dotenv import dotenv_values
-
 credentials = dotenv_values(".env")
 
+
+# Addding Cross Origin Resource Sharing
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+# Adding CORS URLs
+origins = [
+    
+    'http://localhost:3000'
+]
+
+# Add Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = origins,
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"]
+)
+
+
 # connecting to MongoDB with async motor driver
 client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["MONGODB_URL"],tlsCAFile=certifi.where())
 
@@ -67,7 +87,7 @@ class sppModel(BaseModel):
     # print(email)
     spp_code: str = Field(...)
     
-    Date: str = Field(...)
+    date: str = Field(...)
 
     class Config:
         def HexGenerator(num):
@@ -84,7 +104,7 @@ class sppModel(BaseModel):
                 "customer_surname":"KARA",
                 "email": "ALPEREN.KARA@example.com",
                 "spp_code": "{}".format(HexGenerator(num=6)),
-                "Date":"123"
+                "date":"123"
             }
         }
 
@@ -111,7 +131,7 @@ class UpdatesppModel(BaseModel):
                 "customer_surname":"KARA",
                 "email": "jdoe@example.com",
                 "spp_code": "1234567",
-                "Date":"123"
+                "date":"123"
             }
         }
 
@@ -130,7 +150,7 @@ async def new_email_record(customer: sppModel = Body(...)):
     # Appending Random Six Digits and Date
     customer.update(
         {'spp_code':secrets.token_hex(6),
-         'Date': jsonable_encoder(datetime.today())
+         'date': jsonable_encoder(datetime.today())
          })
 
     print(customer)
@@ -143,6 +163,7 @@ async def new_email_record(customer: sppModel = Body(...)):
         } )
     print(customer['email'])
     await simple_send([customer])
+    # return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_email_record)
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_email_record)
 
 # road-1
@@ -164,10 +185,11 @@ async def check_spp_code(email: EmailStr,spp_code: str):
             #return customer
             print('Customer Not Found')
         else: 
-            date = customer['Date']
+            date = customer['date']
             print("Code has been verified for {spp_code} and email: {email} date of {date}".format(spp_code = spp_code, email = email,date= date))
     else: 
-        print("Simple Phishing Protection Code({spp_code}) has not been found".format(spp_code=spp_code))        
+        print("Simple Phishing Protection Code({spp_code}) has not been found".format(spp_code=spp_code))
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content="Code has been verified for {spp_code} and email: {email} date of {date}".format(spp_code = spp_code, email = email,date= date))         
 
     # raise HTTPException(status_code=404, detail=f"Customer Email Record not found")
 
@@ -253,7 +275,7 @@ async def simple_send(customer: list) -> JSONResponse:
     <h5><p>TEST EMAIL - SIMPLE PHISHING PROTECTION</p><h5>
     <p>{customer[0]['spp_code']}</p>
     <p>{customer[0]['email']}</p>
-    <p>{customer[0]['Date']}</p>
+    <p>{customer[0]['date']}</p>
     """
     message = MessageSchema(
     subject="TEST EMAIL - VERSION II - SIMPLE PHISHING PROTECTION",
