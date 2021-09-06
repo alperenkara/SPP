@@ -18,7 +18,7 @@ from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
 from pydantic import BaseModel, EmailStr
 from typing import List
 
-# Enviroment values
+# Enviroment values are registered under .env file
 from dotenv import dotenv_values
 credentials = dotenv_values(".env")
 
@@ -45,8 +45,8 @@ app.add_middleware(
 
 
 # connecting to MongoDB with async motor driver
-client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["MONGODB_URL"],tlsCAFile=certifi.where())
-
+# client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["MONGODB_URL"],tlsCAFile=certifi.where())
+client = motor.motor_asyncio.AsyncIOMotorClient(credentials['MONGODB_URL'],tlsCAFile=certifi.where())
 db = client.spp
 
 print(db)
