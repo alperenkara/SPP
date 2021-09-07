@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y unzip curl \
     && ./aws/install
 
 
-FROM python:3.8.8-slim 
+FROM python:3.8.8-slim  AS prod
 
 WORKDIR /api
 
