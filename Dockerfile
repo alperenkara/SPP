@@ -16,10 +16,19 @@ RUN apt-get update && apt-get install -y unzip curl \
 FROM python:3.8.8-slim  AS prod
 
 WORKDIR /api
+ARG MONGODB_URL
+ENV MONGODB_URL=$MONGODB_URL
+ARG PASS
+ENV PASS=$PASS
+ARG EMAIL
+ENV EMAIL=$EMAIL
+ARG SERVER_NAME 
+ENV SERVER_NAME=$SERVER_NAME
+ARG USERNAME
+ENV USERNAME=$USERNAME
 
 COPY ./requirements.txt /api/requirements.txt
 COPY ./app_e3.py /api/app.py
-COPY ./d.env /api/d.env
 
 RUN pip install -r /api/requirements.txt
 
