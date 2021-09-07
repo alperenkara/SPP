@@ -51,6 +51,6 @@ jobs:
           # Build a docker container and
           # push it to ECR so that it can
           # be deployed to ECS.
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --target prod  --build-arg USERNAME=${{ secrets.USERNAME }}  --build-arg SERVER_NAME=${{ secrets.SERVER_NAME }} --build-arg PASS=${{ secrets.PASS }} --build-arg EMAIL=${{ secrets.EMAIL }}  --build-arg MONGODB_URL=${{ secrets.MONGODB_URL }} ../../Dockerfile
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --target prod  --build-arg USERNAME=${{ secrets.USERNAME }}  --build-arg SERVER_NAME=${{ secrets.SERVER_NAME }} --build-arg PASS=${{ secrets.PASS }} --build-arg EMAIL=${{ secrets.EMAIL }}  --build-arg MONGODB_URL=${{ secrets.MONGODB_URL }} .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
