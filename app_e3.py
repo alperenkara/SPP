@@ -8,8 +8,8 @@ from pydantic import BaseModel, Field, EmailStr
 from bson import ObjectId
 from typing import Optional, List, Dict, Any
 import motor.motor_asyncio
-import secrets
-
+import string
+from random import choice
 # mail imports
 from fastapi import FastAPI, BackgroundTasks, UploadFile, File, Form
 from starlette.responses import JSONResponse
@@ -92,8 +92,10 @@ class sppModel(BaseModel):
 
     class Config:
         def HexGenerator(num):
-            return secrets.token_hex(num)
-        spp_code = HexGenerator(num=6)
+            chars = string.digits
+            random =  ''.join(choice(chars) for _ in range(num))
+            return random
+        spp_code = HexGenerator(num=4)
         print(spp_code)
         # keep in True for _id alias
         allow_population_by_field_name = True
@@ -104,7 +106,7 @@ class sppModel(BaseModel):
                 "customer_name": "ALPEREN",
                 "customer_surname":"KARA",
                 "email": "ALPEREN.KARA@example.com",
-                "spp_code": "{}".format(HexGenerator(num=6)),
+                "spp_code": "{}".format(HexGenerator(num=4)),
                 "date":"123"
             }
         }
@@ -149,8 +151,10 @@ async def new_email_record(customer: sppModel = Body(...)):
     customer = jsonable_encoder(customer)
     customer_email = customer['email']
     # Appending Random Six Digits and Date
+    chars = string.digits
+    random =  ''.join(choice(chars) for _ in range(4))
     customer.update(
-        {'spp_code':secrets.token_hex(6),
+        {'spp_code':random,
          'date': jsonable_encoder(datetime.today())
          })
 
