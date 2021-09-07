@@ -1,0 +1,24 @@
+version: '3.7'
+
+services:
+  api:
+    build:
+      context: .
+      target: builder
+    env_file:
+      - .env
+    ports:
+      - 8000:8000
+  mongodb_container:
+    image: mongo:latest
+    environment:
+      MONGO_DB: spp
+      MONGO_USER: admin
+      MONGO_PASSWORD: adminPassword
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+
+volumes:
+  mongodb_data_container:

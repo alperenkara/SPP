@@ -1,0 +1,11 @@
+version: "3.7"
+
+services:
+  api:
+    security_opt:
+      - "seccomp:unconfined"
+    entrypoint:
+      - tail
+    command:
+      - -f
+      - /dev/null

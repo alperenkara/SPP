@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field, EmailStr
 from bson import ObjectId
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import motor.motor_asyncio
 import secrets
 
@@ -17,10 +17,10 @@ from starlette.requests import Request
 from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
 from pydantic import BaseModel, EmailStr
 from typing import List
-
+import codecs
 # Enviroment values are registered under .env file
 from dotenv import dotenv_values
-credentials = dotenv_values("d.env")
+credentials = dotenv_values(".env")
 
 
 # Addding Cross Origin Resource Sharing
@@ -46,7 +46,7 @@ app.add_middleware(
 
 # connecting to MongoDB with async motor driver
 # client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["MONGODB_URL"],tlsCAFile=certifi.where())
-client = motor.motor_asyncio.AsyncIOMotorClient(credentials['MONGODB_URL'],tlsCAFile=certifi.where())
+client = motor.motor_asyncio.AsyncIOMotorClient(os.environ['MONGODB_URL'],tlsCAFile=certifi.where())
 db = client.spp
 
 print(db)
@@ -180,16 +180,24 @@ async def list_customers():
 @app.post("/{spp_code}", response_description="Verification of SPP Code", response_model=sppModel)
 async def check_spp_code(email: EmailStr,spp_code: str):
     # print(type(email),type(spp_code))
+    verified = False
+    date = ''
+    mode = 'email'
+
     if (customer := await db["customers"].find_one({"spp_code" : spp_code})) is not None:
         if (customer['email']==email) is not True:
             #return customer
             print('Customer Not Found')
+            verified = False
         else: 
+            verified = True
             date = customer['date']
             print("Code has been verified for {spp_code} and email: {email} date of {date}".format(spp_code = spp_code, email = email,date= date))
     else: 
+        verified = False
         print("Simple Phishing Protection Code({spp_code}) has not been found".format(spp_code=spp_code))
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content="Code has been verified for {spp_code} and email: {email} date of {date}".format(spp_code = spp_code, email = email,date= date))         
+    result = {'verified':verified,'date':date,'mode':mode}
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content=result)         
 
     # raise HTTPException(status_code=404, detail=f"Customer Email Record not found")
 
@@ -236,7 +244,7 @@ async def delete_customer(id: str):
 
 class EmailSchema(BaseModel):
     email: List[EmailStr]
-
+    body: Dict[str, Any]
 
 # class EmailContent(BaseModel):
 #      message: str = "test"
@@ -244,15 +252,16 @@ class EmailSchema(BaseModel):
 #      spp_code: str = "test"
 
 conf = ConnectionConfig(
-    MAIL_USERNAME = credentials['USERNAME'],
-    MAIL_PASSWORD = credentials['PASS'],
-    MAIL_FROM = credentials['EMAIL'],
+    MAIL_USERNAME = os.environ['USERNAME'],
+    MAIL_PASSWORD = os.environ['PASS'],
+    MAIL_FROM = os.environ['EMAIL'],
     MAIL_PORT = 587,
-    MAIL_SERVER = credentials['SERVER_NAME'],
+    MAIL_SERVER = os.environ['SERVER_NAME'],
     MAIL_TLS = True,
     MAIL_SSL = False,
     USE_CREDENTIALS = True,
-    VALIDATE_CERTS = True
+    VALIDATE_CERTS = True,
+    TEMPLATE_FOLDER='./templates'
 )
 
 
@@ -271,22 +280,14 @@ async def simple_send(customer: list) -> JSONResponse:
     customer_email = [customer[0]['email']]
     print(customer_email)
     print("customer email type",type(customer_email))
-    html = f"""
-    <h5><p>TEST EMAIL - SIMPLE PHISHING PROTECTION</p><h5>
-    <p>{customer[0]['spp_code']}</p>
-    <p>{customer[0]['email']}</p>
-    <p>{customer[0]['date']}</p>
-    """
     message = MessageSchema(
-    subject="TEST EMAIL - VERSION II - SIMPLE PHISHING PROTECTION",
-    # recipients=email.dict().get("email"),  # List of recipients, as many as you can pass 
-    # !!! RECIPIENTS VARIABLE MUST GET A LIST !!!
+    subject=f"Mr {customer[0]['customer_surname']}, fraud - how to avoid being tricked in a click",
     recipients=customer_email,
-    body=html,
+    template_body = {'spp_code':customer[0]['spp_code']},
     subtype="html")
     
     print("Type of message",type(message))
     
     fm = FastMail(conf)
-    await fm.send_message(message)
+    await fm.send_message(message, template_name='hsbc_template.html')
     return JSONResponse(status_code=200, content={"message": "email has been sent"})
