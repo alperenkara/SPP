@@ -74,7 +74,7 @@ class PyObjectId(ObjectId):
 class sppModel(BaseModel):
     # If you have an attribute on your model that starts with an underscore, Python will assume that it is a private variable
     # We name the field id but give it an alias of _id
-    # We set this id value automatically to an ObjectId string, so you do not need to supply it when creating a new student.
+    # We set this id value automatically to an ObjectId string, so you do not need to supply it when creating a customer record.
     
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     # hexnum=Field(default_factory:=secrets.token_hex(6))
